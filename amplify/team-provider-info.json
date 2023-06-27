@@ -1,0 +1,20 @@
+{
+  "staging": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-kin-staging-214411-authRole",
+      "UnauthRoleArn": "arn:aws:iam::087899765653:role/amplify-kin-staging-214411-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::087899765653:role/amplify-kin-staging-214411-authRole",
+      "Region": "us-east-2",
+      "DeploymentBucketName": "amplify-kin-staging-214411-deployment",
+      "UnauthRoleName": "amplify-kin-staging-214411-unauthRole",
+      "StackName": "amplify-kin-staging-214411",
+      "StackId": "arn:aws:cloudformation:us-east-2:087899765653:stack/amplify-kin-staging-214411/ee3f9de0-0c8e-11ee-9348-0273a71a899f",
+      "AmplifyAppId": "d34rgcjcfkpdu5"
+    },
+    "categories": {
+      "auth": {
+        "Kin": {}
+      }
+    }
+  }
+}
