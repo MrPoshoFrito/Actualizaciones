@@ -1,3 +1,11 @@
+type Location @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  userLocation: User @hasOne
+  untitledfield: String
+  latitude: String
+  longitude: String
+}
+
 type Amigos @model @auth(rules: [{allow: public}]) {
   id: ID!
   nombre: String!

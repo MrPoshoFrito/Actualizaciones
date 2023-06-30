@@ -1,10 +1,46 @@
 import { ModelInit, MutableModel, __modelMeta__, ManagedIdentifier } from "@aws-amplify/datastore";
 // @ts-ignore
-import { LazyLoading, LazyLoadingDisabled, AsyncCollection } from "@aws-amplify/datastore";
+import { LazyLoading, LazyLoadingDisabled, AsyncItem, AsyncCollection } from "@aws-amplify/datastore";
 
 
 
 
+
+type EagerLocation = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<Location, 'id'>;
+    readOnlyFields: 'createdAt' | 'updatedAt';
+  };
+  readonly id: string;
+  readonly userLocation?: User | null;
+  readonly untitledfield?: string | null;
+  readonly latitude?: string | null;
+  readonly longitude?: string | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+  readonly locationUserLocationId?: string | null;
+}
+
+type LazyLocation = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<Location, 'id'>;
+    readOnlyFields: 'createdAt' | 'updatedAt';
+  };
+  readonly id: string;
+  readonly userLocation: AsyncItem<User | undefined>;
+  readonly untitledfield?: string | null;
+  readonly latitude?: string | null;
+  readonly longitude?: string | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+  readonly locationUserLocationId?: string | null;
+}
+
+export declare type Location = LazyLoading extends LazyLoadingDisabled ? EagerLocation : LazyLocation
+
+export declare const Location: (new (init: ModelInit<Location>) => Location) & {
+  copyOf(source: Location, mutator: (draft: MutableModel<Location>) => MutableModel<Location> | void): Location;
+}
 
 type EagerAmigos = {
   readonly [__modelMeta__]: {
