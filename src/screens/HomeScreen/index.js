@@ -1,21 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Feather } from "@expo/vector-icons";
-import { AntDesign } from "@expo/vector-icons";
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  Button,
-  Pressable,
-  TouchableOpacity,
-  Modal,
-} from "react-native";
+import { View, Text, StyleSheet, FlatList, TouchableOpacity } from "react-native";
 import MapView from "react-native-maps";
 import ListItemFamily from "../../components/ListItemFamily";
 import AddFamModal from "../../components/AddFamModal";
-import { Auth, DataStore } from "aws-amplify";
-import { Amigos } from "../../models";
+import { DataStore } from "aws-amplify";
+import { Amigos, User } from "../../models";
 
 const HomeScreen = ({ navigation }) => {
   const [friends, setFriends] = useState([]);
@@ -28,15 +18,41 @@ const HomeScreen = ({ navigation }) => {
     } catch (error) {
       console.log(error);
     }
-    console.log('entramossss')
+    console.log('Success Getting List')
   };
-
+  
   useEffect(() => {
     getFam();
-    
   }, [counter]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleReload = () => {
+    getFam(); // Reload the data
+  };
+
+  const handleAddFamilyMember = async (codigo) => {
+    try {
+      const results = await DataStore.query(User, (user) => user.codigo.eq(codigo));
+      if (results.length > 0) {
+        const user = results[0];
+        await DataStore.save(
+          new Amigos({
+            nombre: user.nombre,
+            apellido: user.apellido,
+            userID: user.id,
+          })
+        );
+        setIsModalOpen(false);
+        handleReload();
+      } else {
+        console.log("User not found");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <MapView style={styles.map} />
@@ -49,7 +65,7 @@ const HomeScreen = ({ navigation }) => {
       />
 
       <View>
-        <Text style={styles.title}>Familiares</Text>
+        <Text style={styles.title}>Kins</Text>
       </View>
 
       <View style={styles.contenedorLista}>
@@ -64,18 +80,12 @@ const HomeScreen = ({ navigation }) => {
             <Text style={styles.textButton}>Agregar</Text>
           </View>
         </TouchableOpacity>
-
-        <TouchableOpacity onPress={() => getFam()}>
-          <View style={styles.buttonReload}>
-            <AntDesign name="reload1" size={24} color="black" />
-          </View>
-        </TouchableOpacity>
       </View>
 
       <AddFamModal
         isModalOpen={isModalOpen}
         setIsModalOpen={setIsModalOpen}
-        functionModal={console.log("prueba")}
+        handleAddFamilyMember={handleAddFamilyMember}
       />
     </View>
   );

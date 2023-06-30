@@ -1,78 +1,49 @@
-import {
-  Text,
-  Modal,
-  View,
-  StyleSheet,
-  Button,
-  TouchableOpacity,
-  TextInput,
-} from "react-native";
+import { Text, Modal, View, StyleSheet, TouchableOpacity, TextInput } from "react-native";
+import { useState } from "react";
 
-import { useEffect, useState } from "react";
-import { DataStore } from "aws-amplify";
-import { Amigos, User } from "../models";
-import { useAuthContext } from "../context/AuthContextUser";
+const AddFamModal = ({ isModalOpen, setIsModalOpen, handleAddFamilyMember }) => {
+  const [codigo, setCodigo] = useState("");
 
-const AddFamModal = ({ isModalOpen, setIsModalOpen, functionModal }) => {
-  const [codigo, setCodigo] = useState();
-  const { sub, dbUser } = useAuthContext();
-  const [user, setUser] = useState();
-  console.log(codigo);
-
-  const getUsers = async () => {
-    try {
-      const results = await DataStore.query(User, (user) =>
-        user.codigo.eq(codigo)
-      );
-      setUser(results);
-    } catch (error) {
-      console.log(error);
-    }
+  const handleSaveAndClose = () => {
+    handleAddFamilyMember(codigo);
   };
 
-  useEffect(() => {
-    getUsers();
-  }, [codigo]);
-
-  console.log(user);
- 
-  const addFriend = async () => {
-    try {
-      await DataStore.save(
-        new Amigos({
-          nombre: user[0].nombre,
-          apellido: user[0].apellido,
-          userID: user[0].id,
-        })
-      );
-      setIsModalOpen(!isModalOpen);
-    } catch (error) {
-      console.log(error);
-    }
+  const handleClose = () => {
+    setIsModalOpen(false);
   };
-
-
 
   return (
-    <>
-      <Modal visible={isModalOpen} transparent={true} animationType="slide">
-        <View style={styles.container}>
-          <View style={styles.modalStyle}>
-            <Text style={styles.title}>Escriba el codigo de enlace</Text>
-            <TextInput style={styles.input} onChangeText={setCodigo} />
-            <TouchableOpacity onPress={addFriend} style={styles.textContainer}>
-              <View>
-                <Text style={styles.textModal}>Guardar y Cerrar</Text>
-              </View>
+    <Modal visible={isModalOpen} transparent={true} animationType="slide">
+      <View style={styles.container}>
+        <View style={styles.modalStyle}>
+          <Text style={styles.title}>Escriba el codigo de enlace</Text>
+          <TextInput style={styles.input} onChangeText={setCodigo} />
+          <View style={styles.buttonContainer}>
+          <TouchableOpacity onPress={handleSaveAndClose} style={[styles.button, styles.saveButton]}>
+              <Text style={styles.textModal}>Guardar</Text>
             </TouchableOpacity>
-          </View>
+            <TouchableOpacity onPress={handleClose} style={[styles.button, styles.closeButton]}>
+              <Text style={styles.textModal}>Cerrar</Text>
+            </TouchableOpacity>
+          </View>          
         </View>
-      </Modal>
-    </>
+      </View>
+    </Modal>
   );
 };
 
 const styles = StyleSheet.create({
+  buttonContainer: {
+    flexDirection: "row",
+    // justifyContent: "center",
+    alignItems: "center",
+    marginTop: 20,
+  },
+  button: {
+    flex: 1,
+    height: 40,
+    borderRadius: 8,
+  },
   container: {
     flex: 1,
     justifyContent: "flex-end",
