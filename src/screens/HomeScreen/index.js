@@ -32,28 +32,6 @@ const HomeScreen = ({ navigation }) => {
     getFam();
   };
 
-  // const handleAddFamilyMember = async (codigo) => {
-  //   try {
-  //     const results = await DataStore.query(User, (user) => user.codigo.eq(codigo));
-  //     if (results.length > 0) {
-  //       const user = results[0];
-  //       await DataStore.save(
-  //         new Amigos({
-  //           nombre: user.nombre,
-  //           apellido: user.apellido,
-  //           userID: user.id,
-  //         })
-  //       );
-  //       setIsModalOpen(false);
-  //       handleReload();
-  //     } else {
-  //       console.log("User not found");
-  //     }
-  //   } catch (error) {
-  //     console.log(error);
-  //   }
-  // };
-
   const handleAddFamilyMember = async (codigo) => {
     try {
       const results = await DataStore.query(User, (user) => user.codigo.eq(codigo));
