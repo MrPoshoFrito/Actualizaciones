@@ -94,7 +94,7 @@ const HomeScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   map: {
     width: "100%",
-    height: 400,
+    flex: 0.7,
   },
   container: {
     flex: 1,
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
   },
   contenedorLista: {
     width: "100%",
-    height: 250,
+    flex: 0.3,
   },
   button: {
     marginHorizontal: 10,
