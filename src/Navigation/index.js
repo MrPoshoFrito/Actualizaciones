@@ -16,9 +16,7 @@ const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
 
 const RouteNavigation = () => {
-  console.log("Entra?");
   const { dbUser } = useAuthContext();
-  console.log(dbUser);
   return (
     <Stack.Navigator>
       {dbUser ? (

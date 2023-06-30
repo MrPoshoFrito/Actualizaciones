@@ -9,44 +9,98 @@ import { Amigos, User } from "../../models";
 
 const HomeScreen = ({ navigation }) => {
   const [friends, setFriends] = useState([]);
-  const [counter, setCounter] = useState(1);
 
   const getFam = async () => {
     try {
-      const result = await DataStore.query(Amigos);
-      setFriends(result);
+      const results = await DataStore.query(Amigos);
+      console.log("All Friends: ", results.length)
+      const filteredResults = results.filter(item => item._deleted === null || item._deleted === undefined);
+      setFriends(filteredResults);
+      console.log("Filtered: ", friends.length)
     } catch (error) {
       console.log(error);
     }
-    console.log('Success Getting List')
   };
-  
+
   useEffect(() => {
     getFam();
-  }, [counter]);
+  }, []);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleReload = () => {
-    getFam(); // Reload the data
+    getFam();
   };
+
+  // const handleAddFamilyMember = async (codigo) => {
+  //   try {
+  //     const results = await DataStore.query(User, (user) => user.codigo.eq(codigo));
+  //     if (results.length > 0) {
+  //       const user = results[0];
+  //       await DataStore.save(
+  //         new Amigos({
+  //           nombre: user.nombre,
+  //           apellido: user.apellido,
+  //           userID: user.id,
+  //         })
+  //       );
+  //       setIsModalOpen(false);
+  //       handleReload();
+  //     } else {
+  //       console.log("User not found");
+  //     }
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  // };
 
   const handleAddFamilyMember = async (codigo) => {
     try {
       const results = await DataStore.query(User, (user) => user.codigo.eq(codigo));
       if (results.length > 0) {
         const user = results[0];
-        await DataStore.save(
-          new Amigos({
-            nombre: user.nombre,
-            apellido: user.apellido,
-            userID: user.id,
-          })
-        );
+        const existingFriend = friends.find((friend) => friend.userID === user.id);
+        if (existingFriend) {
+          console.log("Friend Already Exists")
+          await DataStore.save(
+            Amigos.copyOf(existingFriend, (updated) => {
+              updated._deleted = null;
+            })
+          );
+          setIsModalOpen(false);
+          handleReload();
+        } else {
+          console.log("Friend Does Not Exists YET")
+          await DataStore.save(
+            new Amigos({
+              nombre: user.nombre,
+              apellido: user.apellido,
+              userID: user.id,
+            })
+          );
+        }
         setIsModalOpen(false);
         handleReload();
       } else {
         console.log("User not found");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleDeleteFamilyMember = async (id) => {
+    try {
+      const amigoToDelete = await DataStore.query(Amigos, id);
+      if (amigoToDelete) {
+        await DataStore.save(
+          Amigos.copyOf(amigoToDelete, (updated) => {
+            updated._deleted = true;
+          })
+        );
+        handleReload();
+      } else {
+        console.log("Amigo not found");
       }
     } catch (error) {
       console.log(error);
@@ -71,7 +125,13 @@ const HomeScreen = ({ navigation }) => {
       <View style={styles.contenedorLista}>
         <FlatList
           data={friends}
-          renderItem={({ item }) => <ListItemFamily nombre={item.nombre} id={item.id}/>}
+          renderItem={({ item }) => (
+            <ListItemFamily 
+              nombre={item.nombre}
+              id={item.id}
+              onDelete={handleDeleteFamilyMember}
+            />
+          )}
         />
       </View>
       <View style={styles.containerB}>
@@ -117,6 +177,7 @@ const styles = StyleSheet.create({
     backgroundColor: "lightgreen",
     justifyContent: "center",
     alignItems: "center",
+    marginBottom: 15,
   },
   buttonReload: {
     marginHorizontal: 10,

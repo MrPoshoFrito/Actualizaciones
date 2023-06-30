@@ -4,7 +4,6 @@ import { User } from "../models";
 const AuthContext = createContext({});
 
 const AuthContextProvider = ({ children }) => {
-  console.log("entra al provider");
   const [authUser, setAuthUser] = useState(null);
   const [dbUser, setDbUser] = useState(null);
   const sub = authUser?.attributes?.sub;

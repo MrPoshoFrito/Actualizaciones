@@ -15,9 +15,7 @@ const RegisterScreen = ({navigation}) => {
   const { sub, dbUser, setDbUser } = useAuthContext();
 
   const [name, setName] = useState("");
-  console.log(name);
   const [lastname, setLastname] = useState("");
-  console.log(lastname);
   const [codigo, setCodigo] = useState("");
 
   /* const navigation = useNavigation(); */
