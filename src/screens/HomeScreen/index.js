@@ -13,10 +13,10 @@ const HomeScreen = ({ navigation }) => {
   const getFam = async () => {
     try {
       const results = await DataStore.query(Amigos);
-      console.log("All Friends: ", results.length)
+      // console.log("All Friends: ", results.length)
       const filteredResults = results.filter(item => item._deleted === null || item._deleted === undefined);
       setFriends(filteredResults);
-      console.log("Filtered: ", friends.length)
+      // console.log("Filtered: ", friends.length)
     } catch (error) {
       console.log(error);
     }
