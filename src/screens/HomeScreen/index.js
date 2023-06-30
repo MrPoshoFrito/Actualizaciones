@@ -1,22 +1,37 @@
 import React, { useEffect, useState } from "react";
 import { Feather } from "@expo/vector-icons";
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from "react-native";
-import MapView from "react-native-maps";
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from "react-native";
+import MapView, { Marker } from "react-native-maps";
 import ListItemFamily from "../../components/ListItemFamily";
 import AddFamModal from "../../components/AddFamModal";
 import { DataStore } from "aws-amplify";
-import { Amigos, User } from "../../models";
+import { Amigos, User, Location } from "../../models";
 
 const HomeScreen = ({ navigation }) => {
   const [friends, setFriends] = useState([]);
+  const [friendLocations, setFriendLocations] = useState([]);
 
+  const getLocations = async () => {
+    try {
+      const results = await DataStore.query(Location);
+      const extractedData = results.map(item => ({
+        latitude: parseFloat(item.latitude),
+        longitude: parseFloat(item.longitude),
+        locationUserId: item.locationUserId,
+      }));
+      console.log("Extracted Data: ", extractedData);
+      setFriendLocations(extractedData);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  
+  
   const getFam = async () => {
     try {
       const results = await DataStore.query(Amigos);
-      // console.log("All Friends: ", results.length)
       const filteredResults = results.filter(item => item._deleted === null || item._deleted === undefined);
       setFriends(filteredResults);
-      // console.log("Filtered: ", friends.length)
     } catch (error) {
       console.log(error);
     }
@@ -24,12 +39,20 @@ const HomeScreen = ({ navigation }) => {
 
   useEffect(() => {
     getFam();
+    getLocations();
+
+    const intervalId = setInterval(() => {
+      getLocations();
+    }, 5 * 60 * 1000);
+    return () => clearInterval(intervalId);
+    
   }, []);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleReload = () => {
     getFam();
+    getLocations();
   };
 
   const handleAddFamilyMember = async (codigo) => {
@@ -87,7 +110,30 @@ const HomeScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <MapView style={styles.map} />
+      <MapView
+        style={styles.map}
+        initialRegion={{
+          latitude: 11.431955905044058,
+          longitude: -85.82842820273586,
+          latitudeDelta: 0.0922,
+          longitudeDelta: 0.0421,
+        }}
+      >
+        {friendLocations.map((location, index) => (
+          <Marker
+            key={index}
+            coordinate={{
+              latitude: location.latitude,
+              longitude: location.longitude,
+            }}
+            title={"Here"}
+          >
+            <View>
+              <Image style={styles.icon} source={require("../../../assets/icon.png")}></Image>
+            </View>
+          </Marker>
+        ))}
+      </MapView>
       <Feather
         name="list"
         size={40}
@@ -156,6 +202,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 15,
+  },
+  icon: {
+    width: 25,
+    height: 25,
   },
   buttonReload: {
     marginHorizontal: 10,
