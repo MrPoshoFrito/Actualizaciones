@@ -11,6 +11,7 @@ const ListItemFamily = ({ nombre, id, onDelete}) => {
       console.log(error);
     }
   };
+  
   return (
     <View style={Styles.container}>
       {nombre ? (

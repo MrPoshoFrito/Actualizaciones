@@ -6,10 +6,13 @@ import ListItemFamily from "../../components/ListItemFamily";
 import AddFamModal from "../../components/AddFamModal";
 import { DataStore } from "aws-amplify";
 import { Amigos, User, Location } from "../../models";
+import { useAuthContext } from "../../context/AuthContextUser"
 
 const HomeScreen = ({ navigation }) => {
+  const { dbUser } = useAuthContext();
   const [friends, setFriends] = useState([]);
   const [friendLocations, setFriendLocations] = useState([]);
+  //const [setAllFriends, setAllFriendLocations] = useState([]);
 
   const getLocations = async () => {
     try {
@@ -19,25 +22,30 @@ const HomeScreen = ({ navigation }) => {
         longitude: parseFloat(item.longitude),
         locationUserId: item.locationUserId,
       }));
-      console.log("Extracted Data: ", extractedData);
       setFriendLocations(extractedData);
     } catch (error) {
       console.log(error);
     }
   };
-  
-  
+
+
   const getFam = async () => {
     try {
       const results = await DataStore.query(Amigos);
-      const filteredResults = results.filter(item => item._deleted === null || item._deleted === undefined);
-      setFriends(filteredResults);
+      //const filteredResults = results.filter(item => item._deleted === null || item._deleted === undefined);
+      //const savedResults = filteredResults.filter(item => item.userID === dbUser.id);
+      setFriends(results);
+      results.forEach(Element => {
+        console.log("00000000000000000000000000000000000000000000000000000000000000000")
+        console.log("Friends ", Element.userID, " Name: ", Element.nombre, "IsDeleted: ", Element._deleted)
+      });
     } catch (error) {
       console.log(error);
     }
   };
 
   useEffect(() => {
+    console.log("Current User: ", dbUser.id)
     getFam();
     getLocations();
 
@@ -45,7 +53,7 @@ const HomeScreen = ({ navigation }) => {
       getLocations();
     }, 5 * 60 * 1000);
     return () => clearInterval(intervalId);
-    
+
   }, []);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -57,33 +65,35 @@ const HomeScreen = ({ navigation }) => {
 
   const handleAddFamilyMember = async (codigo) => {
     try {
-      const results = await DataStore.query(User, (user) => user.codigo.eq(codigo));
+      const results = await DataStore.query(User, (user) => user.codigo.eq(codigo));//Check User to Make Friend
       if (results.length > 0) {
-        const user = results[0];
-        const existingFriend = friends.find((friend) => friend.userID === user.id);
+        const user = results[0];//Save User To Make Friend In user
+        const existingFriend = friends.find((friend) => friend.userID === user.id);//Check If User To Make Friend Already Friend
         if (existingFriend) {
-          console.log("Friend Already Exists")
+          console.log("Friend Already Exists")//Already Friend
           await DataStore.save(
             Amigos.copyOf(existingFriend, (updated) => {
-              updated._deleted = null;
+              updated._deleted = false;//Now We are Friends Again
             })
           );
           setIsModalOpen(false);
           handleReload();
         } else {
-          console.log("Friend Does Not Exists YET")
+          console.log("Friend Does Not Exists YET")//Not Friend Yet
           await DataStore.save(
             new Amigos({
               nombre: user.nombre,
               apellido: user.apellido,
-              userID: user.id,
-            })
+              userID: dbUser.id,
+              _deleted: false,
+            })//Now New Friend
           );
         }
         setIsModalOpen(false);
         handleReload();
       } else {
         console.log("User not found");
+        return;
       }
     } catch (error) {
       console.log(error);
@@ -149,13 +159,22 @@ const HomeScreen = ({ navigation }) => {
       <View style={styles.contenedorLista}>
         <FlatList
           data={friends}
-          renderItem={({ item }) => (
-            <ListItemFamily 
-              nombre={item.nombre}
-              id={item.id}
-              onDelete={handleDeleteFamilyMember}
-            />
-          )}
+          renderItem={({ item }) => {
+            if (item._deleted === false) {
+              //console.log("00000000000000000000000000000000000000000000000000000000000000000")
+              //console.log("Friends ", item.userID, " Name: ", item.nombre, "IsDeleted: ", item._deleted)
+              //console.log(item)
+              return (
+                <ListItemFamily
+                  nombre={item.nombre}
+                  id={item.id}
+                  onDelete={handleDeleteFamilyMember}
+                />
+              );
+            } else {
+              return null;
+            }
+          }}
         />
       </View>
       <View style={styles.containerB}>
