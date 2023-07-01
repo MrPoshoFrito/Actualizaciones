@@ -1,5 +1,13 @@
 {
   "expo": {
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow FindMyKin to use your location."
+        }
+      ]
+    ],
     "name": "findmykin",
     "slug": "findmykin",
     "version": "1.0.0",

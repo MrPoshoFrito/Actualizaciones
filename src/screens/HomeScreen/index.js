@@ -1,19 +1,20 @@
-import React, { useEffect, useState } from "react";
-import { Feather } from "@expo/vector-icons";
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from "react-native";
-import MapView, { Marker } from "react-native-maps";
-import ListItemFamily from "../../components/ListItemFamily";
-import AddFamModal from "../../components/AddFamModal";
 import { DataStore } from "aws-amplify";
 import { Amigos, User, Location } from "../../models";
 import { useAuthContext } from "../../context/AuthContextUser"
+import { Feather } from "@expo/vector-icons";
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Platform } from "react-native";
+import React, { useEffect, useState } from "react";
+import MapView, { Marker } from "react-native-maps";
+import * as Location_ from 'expo-location';
+import ListItemFamily from "../../components/ListItemFamily";
+import AddFamModal from "../../components/AddFamModal";
 
 const HomeScreen = ({ navigation }) => {
   const { dbUser } = useAuthContext();
   const [friends, setFriends] = useState([]);
   const [friendLocations, setFriendLocations] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [variable, setVariable] = useState(false);
+  const [userLocation, setUserLocation] = useState(null);
 
   const getLocations = async () => {
     try {
@@ -29,7 +30,7 @@ const HomeScreen = ({ navigation }) => {
         }
       });
       setFriendLocations(allLocations);
-      console.log(friendLocations)
+      // console.log(friendLocations)
     } catch (error) {
       console.log(error);
     }
@@ -45,21 +46,72 @@ const HomeScreen = ({ navigation }) => {
   };
 
   useEffect(() => {
-    console.log("Current User: ", dbUser.id)
-    getFam();
+    const requestLocationPermission = async () => {
+      try {
+        const { status } = await Location_.requestForegroundPermissionsAsync();
+        if (status !== "granted") {
+          console.log("Permission to access location was denied");
+          return;
+        }
+
+        const location = await Location_.getCurrentPositionAsync({});
+        setUserLocation(location.coords); // Save the user's location to state
+      } catch (error) {
+        console.log("Error getting location", error);
+      }
+    };
+
+    const fetchData = async () => {
+      await requestLocationPermission();
+      await getFam();
+      await getLocations();
+      console.log("Current User:", dbUser.id);
+  
+      if (userLocation) {
+        await saveUserLocation();
+      }
+    };
+  
+    fetchData();
+  }, []);
+
+  const handleReload = async () => {
     getLocations();
-
-    const intervalId = setInterval(() => {
-      getLocations();
-    }, 5 * 60 * 1000);
-    return () => clearInterval(intervalId);
-
-  }, [variable]);
-
-  const handleReload = () => {
-    getLocations();
     getFam();
+    if (userLocation) {
+      await saveUserLocation();
+    }
   };
+
+  const saveUserLocation = async () => {
+    try {
+      const existingLocation = friendLocations.find(
+        (location) => location.userID === dbUser.id
+      );
+  
+      if (existingLocation) {
+        // Update existing location
+        await DataStore.save(
+          Location.copyOf(existingLocation, (updated) => {
+            updated.latitude =  userLocation.latitude.toString();
+            updated.longitude = userLocation.longitude.toString();
+          })
+        );
+      } else {
+        // Save new location
+        await DataStore.save(
+          new Location({
+            latitude: userLocation.latitude.toString(),
+            longitude: userLocation.longitude.toString(),
+            locationUserLocationId: dbUser.id,
+          })
+        );
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  
 
   const handleAddFamilyMember = async (codigo) => {
     try {
@@ -79,7 +131,6 @@ const HomeScreen = ({ navigation }) => {
             updateAmigo.isDeleted = false;
             await DataStore.save(updateAmigo);
             setIsModalOpen(!isModalOpen)
-            setVariable(!variable)
             handleReload();
             console.log('Amigo should be false now');
           } else {
@@ -96,7 +147,6 @@ const HomeScreen = ({ navigation }) => {
             })
           );
           setIsModalOpen(!isModalOpen)
-          setVariable(!variable);
           handleReload();
         }
       } else {
@@ -136,6 +186,15 @@ const HomeScreen = ({ navigation }) => {
           longitudeDelta: 0.0421,
         }}
       >
+        {userLocation && (
+          <Marker
+            coordinate={{
+              latitude: userLocation.latitude,
+              longitude: userLocation.longitude,
+            }}
+            title="Your Location"
+          />
+        )}
         {friendLocations.map((location, index) => (
           <Marker
             key={index}
