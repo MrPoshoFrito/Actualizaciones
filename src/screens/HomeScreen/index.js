@@ -13,18 +13,22 @@ const HomeScreen = ({ navigation }) => {
   const [friends, setFriends] = useState([]);
   const [friendLocations, setFriendLocations] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [variable, setVariable] = useState(false);
 
   const getLocations = async () => {
     try {
-      const results = await DataStore.query(Location, (location) =>
-      location.locationUserLocationId("eq", friends.map((friend) => friend.friendID))
-    );
-      const extractedData = results.map(item => ({
-        latitude: parseFloat(item.latitude),
-        longitude: parseFloat(item.longitude),
-        locationUserLocationId: item.locationUserLocationId,
-      }));
-      setFriendLocations(extractedData);
+      const allLocations = []
+      const results = await DataStore.query(Location);
+      friends.forEach(element => {
+        if (element.isDeleted == false && element.userID == dbUser.id) {
+          results.forEach(value => {
+            if (value.locationUserLocationId == element.friendID) {
+              allLocations.push(value);
+            }
+          });
+        }
+      });
+      setFriendLocations(allLocations);
       console.log(friendLocations)
     } catch (error) {
       console.log(error);
@@ -50,11 +54,11 @@ const HomeScreen = ({ navigation }) => {
     }, 5 * 60 * 1000);
     return () => clearInterval(intervalId);
 
-  }, []);
+  }, [variable]);
 
   const handleReload = () => {
-    getFam();
     getLocations();
+    getFam();
   };
 
   const handleAddFamilyMember = async (codigo) => {
@@ -64,19 +68,18 @@ const HomeScreen = ({ navigation }) => {
         const user = results[0];
         const existingAmigo = friends.find(
           (amigo) =>
-            // amigo.nombre === user.nombre &&
-            // amigo.apellido === user.apellido &&
             amigo.friendID === user.id &&
             amigo.userID === dbUser.id
         );
-  
+
         if (existingAmigo) {
           console.log("HERE")
           const updateAmigo = await DataStore.query(Amigos, existingAmigo.id);
           if (existingAmigo.isDeleted != false) {
             updateAmigo.isDeleted = false;
             await DataStore.save(updateAmigo);
-            setIsModalOpen(!IsModalOpen)
+            setIsModalOpen(!isModalOpen)
+            setVariable(!variable)
             handleReload();
             console.log('Amigo should be false now');
           } else {
@@ -92,7 +95,8 @@ const HomeScreen = ({ navigation }) => {
               isDeleted: false,
             })
           );
-          setIsModalOpen(!IsModalOpen)
+          setIsModalOpen(!isModalOpen)
+          setVariable(!variable);
           handleReload();
         }
       } else {
@@ -136,8 +140,8 @@ const HomeScreen = ({ navigation }) => {
           <Marker
             key={index}
             coordinate={{
-              latitude: location.latitude,
-              longitude: location.longitude,
+              latitude: parseFloat(location.latitude),
+              longitude: parseFloat(location.longitude),
             }}
             title={"Here"}
           >
@@ -163,7 +167,7 @@ const HomeScreen = ({ navigation }) => {
         <FlatList
           data={friends}
           renderItem={({ item }) => {
-            if (item.isDeleted == false && item.userID == dbUser.id) {  
+            if (item.isDeleted == false && item.userID == dbUser.id) {
               return (
                 <ListItemFamily
                   nombre={item.nombre}
