@@ -1,8 +1,6 @@
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { EvilIcons } from "@expo/vector-icons";
-import { DataStore } from "aws-amplify";
-import { Amigos } from "../models";
 const ListItemFamily = ({ nombre, id, onDelete}) => {
   const confirmDelete = async () => {
     try {
@@ -11,7 +9,7 @@ const ListItemFamily = ({ nombre, id, onDelete}) => {
       console.log(error);
     }
   };
-  
+
   return (
     <View style={Styles.container}>
       {nombre ? (

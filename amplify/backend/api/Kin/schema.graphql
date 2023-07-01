@@ -11,6 +11,7 @@ type Amigos @model @auth(rules: [{allow: public}]) {
   nombre: String!
   apellido: String!
   userID: ID! @index(name: "byUser")
+  isDeleted: Boolean
 }
 
 type User @model @auth(rules: [{allow: public}]) {

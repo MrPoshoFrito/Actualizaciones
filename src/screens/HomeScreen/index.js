@@ -32,13 +32,12 @@ const HomeScreen = ({ navigation }) => {
   const getFam = async () => {
     try {
       const results = await DataStore.query(Amigos);
-      //const filteredResults = results.filter(item => item._deleted === null || item._deleted === undefined);
-      //const savedResults = filteredResults.filter(item => item.userID === dbUser.id);
       setFriends(results);
+      console.log("00000000000000000000000000000000000000000000000000000000000000000")
       results.forEach(Element => {
-        console.log("00000000000000000000000000000000000000000000000000000000000000000")
-        console.log("Friends ", Element.userID, " Name: ", Element.nombre, "IsDeleted: ", Element._deleted)
+        console.log("Friends ", Element.userID, " Name: ", Element.nombre, "IsDeleted: ", Element.isDeleted)
       });
+      console.log("00000000000000000000000000000000000000000000000000000000000000000")
     } catch (error) {
       console.log(error);
     }
@@ -65,35 +64,47 @@ const HomeScreen = ({ navigation }) => {
 
   const handleAddFamilyMember = async (codigo) => {
     try {
-      const results = await DataStore.query(User, (user) => user.codigo.eq(codigo));//Check User to Make Friend
+      //Check User to Make Friend  
+      const results = await DataStore.query(User, (user) => user.codigo.eq(codigo));
       if (results.length > 0) {
-        const user = results[0];//Save User To Make Friend In user
-        const existingFriend = friends.find((friend) => friend.userID === user.id);//Check If User To Make Friend Already Friend
-        if (existingFriend) {
-          console.log("Friend Already Exists")//Already Friend
-          await DataStore.save(
-            Amigos.copyOf(existingFriend, (updated) => {
-              updated._deleted = false;//Now We are Friends Again
-            })
-          );
-          setIsModalOpen(false);
-          handleReload();
+        const user = results[0];
+  
+        // Check if there is an Amigo with the same nombre and apellido
+        const existingAmigo = friends.find(
+          (amigo) =>
+            amigo.nombre === user.nombre &&
+            amigo.apellido === user.apellido &&
+            amigo.userID === dbUser.id
+        );
+  
+        if (existingAmigo) {
+          console.log("HERE")
+          const updateAmigo = await DataStore.query(Amigos, existingAmigo.id);
+          // Amigo with the same nombre and apellido exists
+          if (existingAmigo.isDeleted != false) {
+            // If _deleted is true, set _deleted to false
+            updateAmigo.isDeleted = false;
+            await DataStore.save(updateAmigo);
+            handleReload();
+            console.log('Amigo should be false now');
+          } else {
+            // If _deleted is false, no action needed
+            console.log('Amigo already exists');
+          }
         } else {
-          console.log("Friend Does Not Exists YET")//Not Friend Yet
+          // Create a new Amigo
           await DataStore.save(
             new Amigos({
               nombre: user.nombre,
               apellido: user.apellido,
               userID: dbUser.id,
-              _deleted: false,
-            })//Now New Friend
+              isDeleted: false,
+            })
           );
+          handleReload();
         }
-        setIsModalOpen(false);
-        handleReload();
       } else {
-        console.log("User not found");
-        return;
+        console.log('User not found');
       }
     } catch (error) {
       console.log(error);
@@ -106,7 +117,7 @@ const HomeScreen = ({ navigation }) => {
       if (amigoToDelete) {
         await DataStore.save(
           Amigos.copyOf(amigoToDelete, (updated) => {
-            updated._deleted = true;
+            updated.isDeleted = true;
           })
         );
         handleReload();
@@ -160,10 +171,8 @@ const HomeScreen = ({ navigation }) => {
         <FlatList
           data={friends}
           renderItem={({ item }) => {
-            if (item._deleted === false) {
-              //console.log("00000000000000000000000000000000000000000000000000000000000000000")
-              //console.log("Friends ", item.userID, " Name: ", item.nombre, "IsDeleted: ", item._deleted)
-              //console.log(item)
+            if (item.isDeleted == false && item.userID == dbUser.id) {  
+              console.log("Friends Filtered", item.userID, " Name: ", item.nombre, "IsDeleted: ", item.isDeleted)
               return (
                 <ListItemFamily
                   nombre={item.nombre}
@@ -171,8 +180,6 @@ const HomeScreen = ({ navigation }) => {
                   onDelete={handleDeleteFamilyMember}
                 />
               );
-            } else {
-              return null;
             }
           }}
         />
