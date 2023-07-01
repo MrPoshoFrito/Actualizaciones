@@ -52,6 +52,7 @@ type EagerAmigos = {
   readonly apellido: string;
   readonly userID: string;
   readonly isDeleted?: boolean | null;
+  readonly friendID?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
 }
@@ -66,6 +67,7 @@ type LazyAmigos = {
   readonly apellido: string;
   readonly userID: string;
   readonly isDeleted?: boolean | null;
+  readonly friendID?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
 }

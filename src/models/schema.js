@@ -136,6 +136,13 @@ export const schema = {
                     "isRequired": false,
                     "attributes": []
                 },
+                "friendID": {
+                    "name": "friendID",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": false,
+                    "attributes": []
+                },
                 "createdAt": {
                     "name": "createdAt",
                     "isArray": false,
@@ -287,5 +294,5 @@ export const schema = {
     "enums": {},
     "nonModels": {},
     "codegenVersion": "3.4.4",
-    "version": "4d075cc33569924024b6a5592af291d2"
+    "version": "702a04f6b7563fe4ba1c6fd80f8492c1"
 };
