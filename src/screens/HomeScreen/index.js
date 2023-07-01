@@ -226,7 +226,7 @@ const HomeScreen = ({ navigation }) => {
         <FlatList
           data={friends}
           renderItem={({ item }) => {
-            if (item.isDeleted == false && item.userID == dbUser.id) {
+            if (item.isDeleted == false && item.userID == dbUser.id) {  
               return (
                 <ListItemFamily
                   nombre={item.nombre}
